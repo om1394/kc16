@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>งานเลี้ยงรุ่น</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&family=Mitr:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #2C5F8A;
+    --primary-light: #4A8ABF;
+    --accent: #E8B84B;
+    --accent-dark: #C49A30;
+    --bg: #F5F0E8;
+    --bg2: #EDE8DC;
+    --card: #FFFFFF;
+    --text: #1A2332;
+    --text2: #5A6575;
+    --text3: #8A95A3;
+    --success: #2E7D52;
+    --success-bg: #E8F5EE;
+    --warn: #B45309;
+    --warn-bg: #FEF3C7;
+    --radius: 16px;
+    --radius-sm: 10px;
+    --shadow: 0 4px 24px rgba(44,95,138,0.10);
+    --shadow-sm: 0 2px 8px rgba(44,95,138,0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Sarabun', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 16px;
+  }
+
+  /* Header */
+  html, body { height: 100%; }
+  .header {
+    background: var(--primary);
+    padding: 10px 16px 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 180px; height: 180px;
+    border-radius: 50%;
+    background: rgba(232,184,75,0.15);
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: 10px; left: -20px;
+    width: 100px; height: 100px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+  }
+  .header-content { position: relative; z-index: 1; display: flex; align-items: center; gap: 10px; }
+  .header-icon {
+    font-size: 22px;
+    display: block;
+    flex-shrink: 0;
+  }
+  .header h1 {
+    font-family: 'Mitr', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: white;
+    line-height: 1.3;
+    margin-bottom: 2px;
+  }
+  .header p {
+    font-size: 11px;
+    color: rgba(255,255,255,0.75);
+    margin-bottom: 0;
+  }
+  .header-text { padding-bottom: 10px; }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    position: relative;
+    z-index: 1;
+    margin-top: 8px;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 8px 4px 9px;
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.6);
+    font-family: 'Sarabun', sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
+  .tab-btn .tab-icon { font-size: 16px; }
+  .tab-btn.active {
+    color: white;
+    border-bottom-color: var(--accent);
+  }
+  .tab-btn:hover { color: rgba(255,255,255,0.9); }
+
+  /* Content */
+  .content { padding: 16px 16px; max-width: 480px; margin: 0 auto; min-height: 60vh; }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* Search */
+  .search-box {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 20px;
+  }
+  .search-label {
+    font-size: 13px;
+    color: var(--text2);
+    margin-bottom: 8px;
+    display: block;
+  }
+  .search-input-wrap {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .search-input {
+    flex: 1;
+    padding: 12px 14px;
+    border: 1.5px solid #DDD8CC;
+    border-radius: var(--radius-sm);
+    font-family: 'Sarabun', sans-serif;
+    font-size: 15px;
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-input:focus { border-color: var(--primary-light); }
+  .search-btn {
+    padding: 12px 18px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: 'Sarabun', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+  }
+  .search-btn:hover { background: var(--primary-light); }
+
+  /* Results list */
+  .result-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+  .result-item {
+    background: var(--bg2);
+    border: 1.5px solid #DDD8CC;
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: all 0.18s;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .result-item:hover {
+    border-color: var(--primary-light);
+    background: white;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+  }
+  .result-name { font-size: 15px; font-weight: 500; }
+  .result-nick { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .result-arrow { color: var(--text3); font-size: 18px; }
+
+  /* Detail card */
+  .detail-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .detail-header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .avatar {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Mitr', sans-serif;
+    font-size: 20px;
+    color: white;
+    font-weight: 600;
+    border: 2px solid rgba(255,255,255,0.4);
+    flex-shrink: 0;
+  }
+  .detail-name { font-family: 'Mitr', sans-serif; font-size: 18px; font-weight: 600; color: white; }
+  .detail-nick { font-size: 13px; color: rgba(255,255,255,0.8); margin-top: 2px; }
+
+  .detail-body { padding: 16px; }
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--bg2);
+    gap: 12px;
+  }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-key {
+    font-size: 13px;
+    color: var(--text2);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .detail-val {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    text-align: right;
+    flex: 1;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .badge-success { background: var(--success-bg); color: var(--success); }
+  .badge-warn { background: var(--warn-bg); color: var(--warn); }
+
+  .section-title {
+    font-family: 'Mitr', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--primary);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--bg2);
+  }
+
+  .shirt-box {
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    display: flex;
+    gap: 10px;
+    margin-top: 4px;
+  }
+  .shirt-item { flex: 1; text-align: center; }
+  .shirt-label { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+  .shirt-val { font-size: 15px; font-weight: 600; color: var(--primary); }
+
+  .back-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    color: var(--primary);
+    font-family: 'Sarabun', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 0 0 12px;
+    font-weight: 500;
+  }
+  .back-btn:hover { color: var(--primary-light); }
+
+  /* News */
+  .news-item {
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    padding: 16px;
+    margin-bottom: 12px;
+    border-left: 4px solid var(--primary);
+    animation: fadeUp 0.3s ease;
+  }
+  .news-date {
+    font-size: 12px;
+    color: var(--text3);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .news-title {
+    font-family: 'Mitr', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--primary);
+    margin-bottom: 6px;
+  }
+  .news-body {
+    font-size: 14px;
+    color: var(--text2);
+    line-height: 1.7;
+  }
+
+  /* Event info */
+  .event-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .event-card-header {
+    background: var(--primary);
+    padding: 12px 16px;
+    color: white;
+    font-family: 'Mitr', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .event-card-body { padding: 14px 16px; }
+  .event-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--bg2);
+    font-size: 14px;
+  }
+  .event-row:last-child { border-bottom: none; }
+  .event-time { font-weight: 600; color: var(--primary); min-width: 52px; font-size: 13px; }
+  .event-desc { color: var(--text2); }
+
+  /* Loading / empty */
+  .msg-box {
+    text-align: center;
+    padding: 32px 20px;
+    color: var(--text3);
+    font-size: 14px;
+  }
+  .msg-box .big { font-size: 36px; margin-bottom: 8px; }
+
+  /* Loader */
+  .loader {
+    width: 28px; height: 28px;
+    border: 3px solid var(--bg2);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 10px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .chip {
+    display: inline-block;
+    background: rgba(232,184,75,0.2);
+    color: var(--accent-dark);
+    border-radius: 20px;
+    padding: 2px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-left: 6px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-content">
+    <span class="header-icon">🎓</span>
+    <div class="header-text">
+      <h1>KC 16 — พบปะสังสรร ครบ 40 ปี</h1>
+      <p>เพื่อนราชวิทย์ 16 · White - Blue - Jean</p>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('search')">
+      <span class="tab-icon">🔍</span>ข้อมูลของฉัน
+    </button>
+    <button class="tab-btn" onclick="switchTab('news')">
+      <span class="tab-icon">📢</span>ข่าวสาร
+    </button>
+    <button class="tab-btn" onclick="switchTab('event')">
+      <span class="tab-icon">📅</span>ข้อมูลงาน
+    </button>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- TAB: SEARCH -->
+  <div id="tab-search" class="tab-panel active">
+    <div id="search-view">
+      <div class="search-box">
+        <span class="search-label">ค้นหาด้วยชื่อหรือชื่อเล่น</span>
+        <div class="search-input-wrap">
+          <input id="search-input" class="search-input" type="text" placeholder="พิมพ์ชื่อ..." />
+          <button class="search-btn" onclick="doSearch()">ค้นหา</button>
+        </div>
+      </div>
+      <div id="search-results"></div>
+    </div>
+
+    <div id="detail-view" style="display:none;">
+      <button class="back-btn" onclick="backToSearch()">← กลับ</button>
+      <div id="detail-content"></div>
+    </div>
+  </div>
+
+  <!-- TAB: NEWS -->
+  <div id="tab-news" class="tab-panel">
+    <div id="news-content">
+      <div class="msg-box">
+        <div class="loader"></div>
+        กำลังโหลด...
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: EVENT -->
+  <div id="tab-event" class="tab-panel">
+    <div class="event-card">
+      <div class="event-card-header">📍 สถานที่และเวลา</div>
+      <div class="event-card-body">
+        <div class="event-row">
+          <span class="event-time">สถานที่</span>
+          <span class="event-desc" id="event-location">—</span>
+        </div>
+        <div class="event-row" style="border-bottom:none; padding-top:4px;">
+          <a href="https://maps.app.goo.gl/M1CztejoE7MURoH6A" target="_blank"
+            style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:10px;background:#2C5F8A;color:white;border-radius:10px;text-decoration:none;font-family:'Sarabun',sans-serif;font-size:14px;font-weight:500;">
+            🗺️ นำทางไปสถานที่จัดงาน
+          </a>
+        </div>
+        <div class="event-row">
+          <span class="event-time">วันที่</span>
+          <span class="event-desc" id="event-date">—</span>
+        </div>
+        <div class="event-row">
+          <span class="event-time">เวลา</span>
+          <span class="event-desc" id="event-time-val">—</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="event-card">
+      <div class="event-card-header">🗓 กำหนดการ</div>
+      <div class="event-card-body" id="schedule-list">
+        <div class="event-row"><span class="event-time">17:00</span><span class="event-desc">เริ่มลงทะเบียน รับของที่ระลึก รอต้อนรับอาจารย์และแขก</span></div>
+        <div class="event-row"><span class="event-time">18:10</span><span class="event-desc">กล่าวเปิดงาน</span></div>
+        <div class="event-row"><span class="event-time">18:30</span><span class="event-desc">สังสรรค์ บรรยากาศมิตรภาพและความคิดถึง</span></div>
+        <div class="event-row"><span class="event-time">19:30</span><span class="event-desc">กิจกรรมรุ่น บูชาครู</span></div>
+        <div class="event-row"><span class="event-time">20:30</span><span class="event-desc">ร้องเพลงร่มกัน / ปิดงาน</span></div>
+      </div>
+    </div>
+
+    <div class="event-card">
+      <div class="event-card-header">🚗 ที่จอดรถ</div>
+      <div class="event-card-body">
+        <div class="event-row">
+          <span class="event-desc" id="parking-info">—</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="event-card">
+      <div class="event-card-header">📞 ติดต่อ</div>
+      <div class="event-card-body">
+        <div class="event-row">
+          <span class="event-desc" id="contact-info">—</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTz-4y5z69Ao6u46pSSomtAjmaUeOpO-eN2I_zIK2tGJUJDh664Zg8kA_ajN0oilzqEVR7rSatBEPL5/pub?gid=1490539297&single=true&output=csv';
+
+// ===== ข้อมูลงาน =====
+const EVENT_INFO = {
+  location: 'ห้องอาหารนายทหารสัญญาบัตร (Office Club) ถนนอรุณอมรินทร์ (ที่เดิมตอน 30 ปี)',
+  date: 'วันเสาร์ที่ 6 มิถุนายน 2569',
+  time: '17:00 – 22:00 น.',
+  parking: 'มีที่จอดรถภายในงาน',
+  contact: 'สหะ 086-617-248 · ไก่ 099-352-2515'
+};
+
+// ===== ข่าวสาร =====
+const NEWS = [
+  {
+    date: '6 มิ.ย. 2569',
+    title: '🗓 กำหนดการวันงาน',
+    body: '17:00 น. — เริ่มลงทะเบียน รับของที่ระลึก รอต้อนรับอาจารย์และแขก\n18:10 - 18:30 น. — กล่าวเปิดงาน\n18:30 - 19:30 น. — สังสรรค์ บรรยากาศมิตรภาพและความคิดถึง\n19:30 - 20:30 น. — กิจกรรมรุ่น บูชาครู\n20:30 - 22:00 น. — ร้องเพลงร่มกัน / ปิดงาน'
+  },
+  {
+    date: '6 มิ.ย. 2569',
+    title: '👔 การแต่งกาย',
+    body: 'เสื้องาน สีฟ้า / ขาว · กางเกงขายาว / ยีนส์ · รองเท้าไม่แตะ\n(ขอให้อยู่บนความสุภาพ)'
+  },
+  {
+    date: '6 มิ.ย. 2569',
+    title: '📍 สถานที่',
+    body: 'ห้องอาหารนายทหารสัญญาบัตร (Office Club)\nถนนอรุณอมรินทร์ — ที่เดิมตอน 30 ปี'
+  }
+];
+
+let allData = [];
+
+// ===== โหลดข้อมูล CSV =====
+async function loadCSV() {
+  try {
+    const res = await fetch(CSV_URL);
+    const text = await res.text();
+    const rows = parseCSV(text);
+    if (rows.length < 2) return [];
+    const headers = rows[0].map(h => h.trim());
+    return rows.slice(1)
+      .filter(r => r.some(c => c.trim()))
+      .map(r => {
+        const obj = {};
+        headers.forEach((h, i) => obj[h] = (r[i] || '').trim());
+        return obj;
+      });
+  } catch(e) {
+    return [];
+  }
+}
+
+function parseCSV(text) {
+  const rows = [];
+  let row = [], cur = '', inQ = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (c === '"') {
+      if (inQ && text[i+1] === '"') { cur += '"'; i++; }
+      else inQ = !inQ;
+    } else if (c === ',' && !inQ) {
+      row.push(cur); cur = '';
+    } else if ((c === '\n' || c === '\r') && !inQ) {
+      if (c === '\r' && text[i+1] === '\n') i++;
+      row.push(cur); rows.push(row); row = []; cur = '';
+    } else cur += c;
+  }
+  if (cur || row.length) { row.push(cur); rows.push(row); }
+  return rows;
+}
+
+// ===== ค้นหา =====
+function doSearch() {
+  const q = document.getElementById('search-input').value.trim();
+  if (!q) return;
+  const res = document.getElementById('search-results');
+
+  if (!allData.length) {
+    res.innerHTML = '<div class="msg-box"><div class="loader"></div>กำลังโหลดข้อมูล...</div>';
+    loadCSV().then(data => {
+      allData = data;
+      renderResults(q);
+    });
+  } else {
+    renderResults(q);
+  }
+}
+
+function renderResults(q) {
+  const res = document.getElementById('search-results');
+  const lower = q.toLowerCase();
+  const found = allData.filter(r => {
+    const name = (r['ชื่อ-นามสกุล'] || r['ชื่อ นามสกุล'] || '').toLowerCase();
+    const nick = (r['ชื่อเล่น'] || '').toLowerCase();
+    return name.includes(lower) || nick.includes(lower);
+  });
+
+  if (!found.length) {
+    res.innerHTML = '<div class="msg-box"><div class="big">🔍</div>ไม่พบข้อมูล ลองพิมพ์ชื่อใหม่อีกครั้ง</div>';
+    return;
+  }
+
+  res.innerHTML = '<div class="result-list">' +
+    found.map((r, i) => {
+      const name = r['ชื่อ-นามสกุล'] || r['ชื่อ นามสกุล'] || '';
+      const nick = r['ชื่อเล่น'] || '';
+      const idx = allData.indexOf(r);
+      return `<div class="result-item" onclick="showDetail(${idx})">
+        <div>
+          <div class="result-name">${name}</div>
+          <div class="result-nick">ชื่อเล่น: ${nick || '—'}</div>
+        </div>
+        <span class="result-arrow">›</span>
+      </div>`;
+    }).join('') + '</div>';
+}
+
+document.getElementById('search-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doSearch();
+});
+
+// ===== แสดง Detail =====
+function showDetail(idx) {
+  const r = allData[idx];
+  if (!r) return;
+
+  const name = r['ชื่อ-นามสกุล'] || r['ชื่อ นามสกุล'] || '—';
+  const nick = r['ชื่อเล่น'] || '—';
+  const paid = r['ชำระเงิน'] || '';
+  const isPaid = paid && paid !== '-' && paid.toLowerCase() !== 'ยังไม่ชำระ' && paid !== '0' && paid !== 'false';
+  const avatarText = nick !== '—' ? nick.charAt(0) : name.charAt(0);
+
+  const companion = r['ผู้ติดตาม'] || '—';
+  const room = r['ห้องพัก'] || '';
+  const shirtSize = r['ขนาด'] || '—';
+  const shirtColor = r['สี'] || '—';
+  const shirtQty = r['จำนวน'] || '—';
+  const no = r['no'] || r['No'] || r['NO'] || '';
+
+  let html = `
+    <div class="detail-card">
+      <div class="detail-header">
+        <div class="avatar">${avatarText}</div>
+        <div>
+          <div class="detail-name">${name}</div>
+          <div class="detail-nick">ชื่อเล่น: ${nick}${no ? ' <span style="opacity:0.7;font-size:12px;">#'+no+'</span>' : ''}</div>
+        </div>
+      </div>
+      <div class="detail-body">
+        <div class="detail-row">
+          <span class="detail-key">👥 ผู้ติดตาม</span>
+          <span class="detail-val">${companion} คน</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-key">💳 สถานะชำระ</span>
+          <span class="detail-val">
+            <span class="badge ${isPaid ? 'badge-success' : 'badge-warn'}">
+              ${isPaid ? '✓ ชำระแล้ว' : '⏳ รอชำระ'}
+            </span>
+          </span>
+        </div>
+        ${room ? `<div class="detail-row">
+          <span class="detail-key">🏨 ห้องพัก</span>
+          <span class="detail-val">${room}</span>
+        </div>` : ''}
+      </div>
+    </div>`;
+
+  html += `
+    <div class="section-title">👕 เสื้อที่ระลึก</div>
+    <div class="detail-card">
+      <div class="detail-body" style="padding:14px 16px;">
+        <div class="shirt-box">
+          <div class="shirt-item">
+            <div class="shirt-label">ขนาด</div>
+            <div class="shirt-val">${shirtSize}</div>
+          </div>
+          <div class="shirt-item">
+            <div class="shirt-label">สี</div>
+            <div class="shirt-val">${shirtColor}</div>
+          </div>
+          <div class="shirt-item">
+            <div class="shirt-label">จำนวน</div>
+            <div class="shirt-val">${shirtQty} ตัว</div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+  document.getElementById('detail-content').innerHTML = html;
+  document.getElementById('search-view').style.display = 'none';
+  document.getElementById('detail-view').style.display = 'block';
+  window.scrollTo(0, 0);
+}
+
+function backToSearch() {
+  document.getElementById('detail-view').style.display = 'none';
+  document.getElementById('search-view').style.display = 'block';
+}
+
+// ===== ข่าวสาร =====
+function renderNews() {
+  const el = document.getElementById('news-content');
+  if (!NEWS.length) {
+    el.innerHTML = '<div class="msg-box"><div class="big">📭</div>ยังไม่มีข่าวสาร</div>';
+    return;
+  }
+  el.innerHTML = NEWS.map(n => `
+    <div class="news-item">
+      <div class="news-date">📅 ${n.date}</div>
+      <div class="news-title">${n.title}</div>
+      <div class="news-body">${n.body.replace(/\n/g, '<br>')}</div>
+    </div>`).join('');
+}
+
+// ===== ข้อมูลงาน =====
+function renderEvent() {
+  document.getElementById('event-location').textContent = EVENT_INFO.location;
+  document.getElementById('event-date').textContent = EVENT_INFO.date;
+  document.getElementById('event-time-val').textContent = EVENT_INFO.time;
+  document.getElementById('parking-info').textContent = EVENT_INFO.parking;
+  document.getElementById('contact-info').textContent = EVENT_INFO.contact;
+}
+
+// ===== Switch Tabs =====
+function switchTab(tab) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  event.currentTarget.classList.add('active');
+
+  if (tab === 'news') renderNews();
+  if (tab === 'event') renderEvent();
+}
+
+// init
+renderEvent();
+</script>
+</body>
+</html>
