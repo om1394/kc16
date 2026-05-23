@@ -414,11 +414,11 @@
     <button class="tab-btn active" onclick="switchTab('search')">
       <span class="tab-icon">🔍</span>ข้อมูลของฉัน
     </button>
-    <button class="tab-btn" onclick="switchTab('news')">
-      <span class="tab-icon">📢</span>ข่าวสาร
-    </button>
     <button class="tab-btn" onclick="switchTab('event')">
       <span class="tab-icon">📅</span>ข้อมูลงาน
+    </button>
+    <button class="tab-btn" onclick="switchTab('mycard')">
+      <span class="tab-icon">🎫</span>บัตรของฉัน
     </button>
   </div>
 </div>
@@ -441,16 +441,6 @@
     <div id="detail-view" style="display:none;">
       <button class="back-btn" onclick="backToSearch()">← กลับ</button>
       <div id="detail-content"></div>
-    </div>
-  </div>
-
-  <!-- TAB: NEWS -->
-  <div id="tab-news" class="tab-panel">
-    <div id="news-content">
-      <div class="msg-box">
-        <div class="loader"></div>
-        กำลังโหลด...
-      </div>
     </div>
   </div>
 
@@ -509,6 +499,25 @@
       </div>
     </div>
   </div>
+
+  <!-- TAB: MY CARD -->
+  <div id="tab-mycard" class="tab-panel">
+    <div id="mycard-search-view">
+      <div class="search-box">
+        <span class="search-label">พิมพ์ชื่อหรือชื่อเล่นเพื่อดูบัตร</span>
+        <div class="search-input-wrap">
+          <input id="mycard-input" class="search-input" type="text" placeholder="พิมพ์ชื่อ..." />
+          <button class="search-btn" onclick="doCardSearch()">ค้นหา</button>
+        </div>
+      </div>
+      <div id="mycard-results"></div>
+    </div>
+    <div id="mycard-detail" style="display:none;">
+      <button class="back-btn" onclick="backToCardSearch()">← กลับ</button>
+      <div id="mycard-content"></div>
+    </div>
+  </div>
+
 
 </div>
 
@@ -657,7 +666,7 @@ function showDetail(idx) {
       <div class="detail-header">
         <div class="avatar">${avatarText}</div>
         <div>
-          <div class="detail-name">${name}</div>
+          <div class="detail-name" style="font-size:22px;">${name}</div>
           <div class="detail-nick">ชื่อเล่น: ${nick}${no ? ' <span style="opacity:0.7;font-size:12px;">#'+no+'</span>' : ''}</div>
         </div>
       </div>
@@ -678,6 +687,14 @@ function showDetail(idx) {
           <span class="detail-key">🏨 ห้องพัก</span>
           <span class="detail-val">${room}</span>
         </div>` : ''}
+        <div class="detail-row">
+          <span class="detail-key">👕 รับเสื้อ</span>
+          <span class="detail-val">
+            ${(r['รับเสื้อ'] && r['รับเสื้อ'] !== 'FALSE' && r['รับเสื้อ'] !== '' && r['รับเสื้อ'] !== 'false')
+              ? '<span class="badge badge-success">✓ รับแล้ว</span>'
+              : '<span class="badge badge-warn">📦 ยังไม่ได้รับ</span>'}
+          </span>
+        </div>
       </div>
     </div>`;
 
@@ -748,8 +765,201 @@ function switchTab(tab) {
   if (tab === 'event') renderEvent();
 }
 
+
+// ===== Check-in by URL param ?id=N =====
+function checkInMode() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+  if (!id) return;
+
+  document.querySelector('.tabs').style.display = 'none';
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+
+  const contentEl = document.querySelector('.content');
+  contentEl.innerHTML = '<div class="msg-box"><div class="loader"></div>กำลังโหลดข้อมูล...</div>';
+
+  loadCSV().then(data => {
+    allData = data;
+    const r = data.find(row => {
+      const no = (row['no'] || row['No'] || row['NO'] || '').toString().trim();
+      return no === id.toString().trim();
+    });
+
+    if (!r) {
+      contentEl.innerHTML = '<div class="msg-box"><div class="big">❌</div>ไม่พบข้อมูล<br>กรุณาติดต่อเจ้าหน้าที่</div>';
+      return;
+    }
+
+    const name = r['ชื่อ-นามสกุล'] || r['ชื่อ นามสกุล'] || '—';
+    const nick = r['ชื่อเล่น'] || '—';
+    const shirtSize = r['ขนาด'] || '—';
+    const shirtColor = r['สี'] || '—';
+    const shirtQty = r['จำนวน'] || '—';
+    const avatarText = nick !== '—' ? nick.charAt(0) : name.charAt(0);
+
+    contentEl.innerHTML = `
+      <div style="text-align:center;padding:10px 0 20px;">
+        <div style="font-size:13px;color:var(--text3);margin-bottom:6px;">🎟 บัตรเข้างาน KC 16</div>
+        <div style="width:72px;height:72px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-family:'Mitr',sans-serif;font-size:28px;font-weight:600;color:white;margin:0 auto 12px;border:3px solid var(--accent);">${avatarText}</div>
+        <div style="font-family:'Mitr',sans-serif;font-size:22px;font-weight:600;color:var(--text);">${name}</div>
+        <div style="font-size:14px;color:var(--text2);margin-top:4px;">ชื่อเล่น: ${nick}</div>
+      </div>
+      <div style="background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:16px;">
+        <div style="background:var(--primary);padding:12px 16px;color:white;font-family:'Mitr',sans-serif;font-size:14px;font-weight:500;">👕 เสื้อที่ระลึก</div>
+        <div style="padding:16px;">
+          <div style="display:flex;gap:10px;text-align:center;">
+            <div style="flex:1;background:var(--bg);border-radius:10px;padding:14px 8px;">
+              <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">ขนาด</div>
+              <div style="font-size:24px;font-weight:700;color:var(--primary);font-family:'Mitr',sans-serif;">${shirtSize}</div>
+            </div>
+            <div style="flex:1;background:var(--bg);border-radius:10px;padding:14px 8px;">
+              <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">สี</div>
+              <div style="font-size:24px;font-weight:700;color:var(--primary);font-family:'Mitr',sans-serif;">${shirtColor}</div>
+            </div>
+            <div style="flex:1;background:var(--bg);border-radius:10px;padding:14px 8px;">
+              <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">จำนวน</div>
+              <div style="font-size:24px;font-weight:700;color:var(--primary);font-family:'Mitr',sans-serif;">${shirtQty}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="background:var(--success-bg);border:1.5px solid #A8D5B8;border-radius:var(--radius);padding:14px 16px;text-align:center;">
+        <div style="font-size:28px;margin-bottom:4px;">✅</div>
+        <div style="font-size:14px;font-weight:500;color:var(--success);">ยืนยันตัวตนสำเร็จ</div>
+        <div style="font-size:12px;color:var(--success);margin-top:2px;">ยินดีต้อนรับสู่งาน KC 16 ครบ 40 ปี</div>
+      </div>`;
+  });
+}
+
+
+// ===== บัตรของฉัน =====
+function doCardSearch() {
+  const q = document.getElementById('mycard-input').value.trim();
+  if (!q) return;
+  const res = document.getElementById('mycard-results');
+
+  const run = () => {
+    const lower = q.toLowerCase();
+    const found = allData.filter(r => {
+      const name = (r['ชื่อ-นามสกุล'] || r['ชื่อ นามสกุล'] || '').toLowerCase();
+      const nick = (r['ชื่อเล่น'] || '').toLowerCase();
+      return name.includes(lower) || nick.includes(lower);
+    });
+    if (!found.length) {
+      res.innerHTML = '<div class="msg-box"><div class="big">🔍</div>ไม่พบข้อมูล</div>';
+      return;
+    }
+    res.innerHTML = '<div class="result-list">' +
+      found.map(r => {
+        const idx = allData.indexOf(r);
+        const name = r['ชื่อ-นามสกุล'] || r['ชื่อ นามสกุล'] || '';
+        const nick = r['ชื่อเล่น'] || '';
+        return `<div class="result-item" onclick="showCard(${idx})">
+          <div>
+            <div class="result-name">${name}</div>
+            <div class="result-nick">ชื่อเล่น: ${nick || '—'}</div>
+          </div>
+          <span class="result-arrow">›</span>
+        </div>`;
+      }).join('') + '</div>';
+  };
+
+  if (!allData.length) {
+    res.innerHTML = '<div class="msg-box"><div class="loader"></div>กำลังโหลด...</div>';
+    loadCSV().then(data => { allData = data; run(); });
+  } else { run(); }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const inp = document.getElementById('mycard-input');
+  if (inp) inp.addEventListener('keydown', e => { if (e.key === 'Enter') doCardSearch(); });
+});
+
+function showCard(idx) {
+  const r = allData[idx];
+  if (!r) return;
+  const name = r['ชื่อ-นามสกุล'] || r['ชื่อ นามสกุล'] || '—';
+  const nick = r['ชื่อเล่น'] || '—';
+  const no = r['no'] || r['No'] || r['NO'] || '—';
+  const size = r['ขนาด'] || '—';
+  const color = r['สี'] || '—';
+  const qty = r['จำนวน'] || '—';
+  const room = r['ห้องพัก'] || '';
+  const companion = r['ผู้ติดตาม'] || '0';
+  const paid = r['ชำระเงิน'] || '';
+  const isPaid = paid && paid !== '-' && paid.toLowerCase() !== 'ยังไม่ชำระ' && paid !== '0' && paid !== 'false';
+  const avatarText = nick !== '—' ? nick.charAt(0) : name.charAt(0);
+
+  document.getElementById('mycard-content').innerHTML = `
+    <div class="detail-card">
+      <div class="detail-header">
+        <div class="avatar">${avatarText}</div>
+        <div>
+          <div class="detail-name" style="font-size:22px;">${name}</div>
+          <div class="detail-nick">ชื่อเล่น: ${nick}</div>
+        </div>
+      </div>
+      <div class="detail-body">
+        <div class="detail-row">
+          <span class="detail-key">🔢 หมายเลข</span>
+          <span class="detail-val" style="font-size:22px;font-weight:700;color:var(--primary);font-family:'Mitr',sans-serif;">No. ${no}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-key">💳 สถานะ</span>
+          <span class="detail-val"><span class="badge ${isPaid ? 'badge-success' : 'badge-warn'}">${isPaid ? '✓ ชำระแล้ว' : '⏳ รอชำระ'}</span></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-key">👥 ผู้ติดตาม</span>
+          <span class="detail-val">${companion} คน</span>
+        </div>
+        ${room ? `<div class="detail-row">
+          <span class="detail-key">🏨 ห้องพัก</span>
+          <span class="detail-val">${room}</span>
+        </div>` : ''}
+        <div class="detail-row">
+          <span class="detail-key">👕 รับเสื้อ</span>
+          <span class="detail-val">
+            ${(r['รับเสื้อ'] && r['รับเสื้อ'] !== 'FALSE' && r['รับเสื้อ'] !== '' && r['รับเสื้อ'] !== 'false')
+              ? '<span class="badge badge-success">✓ รับแล้ว</span>'
+              : '<span class="badge badge-warn">📦 ยังไม่ได้รับ</span>'}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:16px;">
+      <div style="background:var(--primary);padding:12px 16px;color:white;font-family:'Mitr',sans-serif;font-size:14px;font-weight:500;">👕 เสื้อที่ระลึก</div>
+      <div style="padding:16px;">
+        <div style="display:flex;gap:10px;text-align:center;">
+          <div style="flex:1;background:var(--bg);border-radius:10px;padding:14px 8px;">
+            <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">ขนาด</div>
+            <div style="font-size:32px;font-weight:700;color:var(--primary);font-family:'Mitr',sans-serif;">${size}</div>
+          </div>
+          <div style="flex:1;background:var(--bg);border-radius:10px;padding:14px 8px;">
+            <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">สี</div>
+            <div style="font-size:32px;font-weight:700;color:var(--primary);font-family:'Mitr',sans-serif;">${color}</div>
+          </div>
+          <div style="flex:1;background:var(--bg);border-radius:10px;padding:14px 8px;">
+            <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">จำนวน</div>
+            <div style="font-size:32px;font-weight:700;color:var(--primary);font-family:'Mitr',sans-serif;">${qty}</div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+  document.getElementById('mycard-search-view').style.display = 'none';
+  document.getElementById('mycard-detail').style.display = 'block';
+  window.scrollTo(0, 0);
+}
+
+function backToCardSearch() {
+  document.getElementById('mycard-detail').style.display = 'none';
+  document.getElementById('mycard-search-view').style.display = 'block';
+}
+
 // init
 renderEvent();
+checkInMode();
 </script>
 </body>
 </html>
