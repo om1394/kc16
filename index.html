@@ -1218,10 +1218,14 @@ async function toggleReceive(no, btn) {
   btn.textContent = '⏳ กำลังบันทึก...';
 
   try {
+    // ใช้ URLSearchParams เพื่อหลีกเลี่ยง CORS
+    const params = new URLSearchParams();
+    params.append('no', no);
+    params.append('action', action);
+
     const res = await fetch(SCRIPT_URL, {
       method: 'POST',
-      body: JSON.stringify({ no, action }),
-      headers: { 'Content-Type': 'text/plain' }
+      body: params
     });
     const result = await res.json();
 
