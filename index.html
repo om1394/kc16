@@ -398,9 +398,73 @@
     font-weight: 500;
     margin-left: 6px;
   }
+
+  /* Admin */
+  .admin-fab {
+    position: fixed;
+    bottom: 20px;
+    right: 16px;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: rgba(44,95,138,0.15);
+    border: 1.5px solid rgba(44,95,138,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    cursor: pointer;
+    z-index: 999;
+    transition: all 0.2s;
+  }
+  .admin-fab:hover { background: rgba(44,95,138,0.3); }
+  .admin-fab.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    box-shadow: 0 4px 12px rgba(44,95,138,0.4);
+  }
+  .admin-bar {
+    display: none;
+    background: var(--primary);
+    padding: 8px 16px;
+    text-align: center;
+    font-size: 12px;
+    color: rgba(255,255,255,0.9);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .admin-bar.show { display: block; }
+  .btn-receive {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    margin-top: 12px;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'Sarabun', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-receive.received {
+    background: var(--success-bg);
+    color: var(--success);
+    border: 2px solid #A8D5B8;
+  }
+  .btn-receive.not-received {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 4px 12px rgba(44,95,138,0.3);
+  }
+  .btn-receive:active { transform: scale(0.98); }
 </style>
 </head>
 <body>
+
+<div id="admin-bar" class="admin-bar">🔐 โหมด Admin — กำลังใช้งาน</div>
+<button class="admin-fab" id="admin-fab" onclick="toggleAdminLogin()" title="Admin">🔑</button>
 
 <div class="header">
   <div class="header-content">
@@ -523,6 +587,11 @@
 
 <script>
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTz-4y5z69Ao6u46pSSomtAjmaUeOpO-eN2I_zIK2tGJUJDh664Zg8kA_ajN0oilzqEVR7rSatBEPL5/pub?gid=1490539297&single=true&output=csv';
+
+// ===== Admin Config =====
+const ADMIN_PASSWORD = 'kc16admin';
+let SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzvmlNARhsRiz_aleOmUNiuRFqYyHfZOW0JN_nFw1Q4jiE6p-8sCFSp7bocI_jQj2xJ8g/exec';
+let isAdminMode = false;
 
 // ===== ข้อมูลงาน =====
 const EVENT_INFO = {
@@ -945,7 +1014,13 @@ function showCard(idx) {
           </div>
         </div>
       </div>
-    </div>`;
+    </div>
+    ${isAdminMode ? `
+    <button id="btn-receive-${no}"
+      class="btn-receive ${(r['รับเสื้อ'] && r['รับเสื้อ'] !== 'FALSE' && r['รับเสื้อ'] !== 'false' && r['รับเสื้อ'] !== '') ? 'received' : 'not-received'}"
+      onclick="toggleReceive('${no}', this)">
+      ${(r['รับเสื้อ'] && r['รับเสื้อ'] !== 'FALSE' && r['รับเสื้อ'] !== 'false' && r['รับเสื้อ'] !== '') ? '✅ รับเสื้อแล้ว — กดเพื่อยกเลิก' : '📦 กดเพื่อยืนยันรับเสื้อ'}
+    </button>` : ''}`;
 
   document.getElementById('mycard-search-view').style.display = 'none';
   document.getElementById('mycard-detail').style.display = 'block';
@@ -955,6 +1030,73 @@ function showCard(idx) {
 function backToCardSearch() {
   document.getElementById('mycard-detail').style.display = 'none';
   document.getElementById('mycard-search-view').style.display = 'block';
+}
+
+
+// ===== Admin Functions =====
+function toggleAdminLogin() {
+  if (isAdminMode) {
+    if (confirm('ออกจากโหมด Admin?')) {
+      isAdminMode = false;
+      document.getElementById('admin-bar').classList.remove('show');
+      document.getElementById('admin-fab').classList.remove('active');
+      document.getElementById('admin-fab').textContent = '🔑';
+    }
+    return;
+  }
+  const pwd = prompt('กรุณาใส่รหัส Admin:');
+  if (!pwd) return;
+  if (pwd === ADMIN_PASSWORD) {
+    isAdminMode = true;
+    document.getElementById('admin-bar').classList.add('show');
+    document.getElementById('admin-fab').classList.add('active');
+    document.getElementById('admin-fab').textContent = '🔓';
+    alert('✅ เข้าสู่โหมด Admin แล้ว');
+  } else {
+    alert('❌ รหัสไม่ถูกต้อง');
+  }
+}
+
+async function toggleReceive(no, btn) {
+  if (!SCRIPT_URL) {
+    alert('⚠️ ยังไม่ได้ตั้งค่า Script URL\nกรุณาติดตั้ง Apps Script ก่อน');
+    return;
+  }
+
+  const r = allData.find(row => (row['no'] || row['No'] || row['NO'] || '').toString().trim() === no.toString().trim());
+  if (!r) return;
+
+  const currentlyReceived = r['รับเสื้อ'] && r['รับเสื้อ'] !== 'FALSE' && r['รับเสื้อ'] !== 'false' && r['รับเสื้อ'] !== '';
+  const action = currentlyReceived ? 'uncheck' : 'check';
+  const confirmMsg = currentlyReceived ? 'ยกเลิกการรับเสื้อของคนนี้?' : 'ยืนยันว่าคนนี้รับเสื้อแล้ว?';
+
+  if (!confirm(confirmMsg)) return;
+
+  btn.disabled = true;
+  btn.textContent = '⏳ กำลังบันทึก...';
+
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ no, action }),
+      headers: { 'Content-Type': 'text/plain' }
+    });
+    const result = await res.json();
+
+    if (result.success) {
+      r['รับเสื้อ'] = action === 'check' ? 'TRUE' : 'FALSE';
+      const received = action === 'check';
+      btn.className = 'btn-receive ' + (received ? 'received' : 'not-received');
+      btn.textContent = received ? '✅ รับเสื้อแล้ว — กดเพื่อยกเลิก' : '📦 กดเพื่อยืนยันรับเสื้อ';
+    } else {
+      alert('❌ เกิดข้อผิดพลาด: ' + result.message);
+      btn.textContent = currentlyReceived ? '✅ รับเสื้อแล้ว — กดเพื่อยกเลิก' : '📦 กดเพื่อยืนยันรับเสื้อ';
+    }
+  } catch(e) {
+    alert('❌ ไม่สามารถเชื่อมต่อได้: ' + e.message);
+    btn.textContent = currentlyReceived ? '✅ รับเสื้อแล้ว — กดเพื่อยกเลิก' : '📦 กดเพื่อยืนยันรับเสื้อ';
+  }
+  btn.disabled = false;
 }
 
 // init
