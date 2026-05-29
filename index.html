@@ -459,6 +459,58 @@
     box-shadow: 0 4px 12px rgba(44,95,138,0.3);
   }
   .btn-receive:active { transform: scale(0.98); }
+
+  .summary-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .summary-header {
+    padding: 12px 16px;
+    color: white;
+    font-family: 'Mitr', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .summary-stat {
+    display: flex;
+    gap: 10px;
+    padding: 14px 16px;
+  }
+  .stat-box {
+    flex: 1;
+    text-align: center;
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    padding: 12px 6px;
+  }
+  .stat-num {
+    font-family: 'Mitr', sans-serif;
+    font-size: 32px;
+    font-weight: 600;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .stat-label { font-size: 11px; color: var(--text3); }
+  .person-list { padding: 0 16px 12px; }
+  .person-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--bg2);
+    font-size: 13px;
+  }
+  .person-row:last-child { border-bottom: none; }
+  .person-no {
+    font-size: 11px;
+    color: var(--text3);
+    min-width: 28px;
+  }
+  .person-name { flex: 1; color: var(--text); }
+  .person-shirt { font-size: 12px; color: var(--text2); }
 </style>
 </head>
 <body>
@@ -483,6 +535,9 @@
     </button>
     <button class="tab-btn" onclick="switchTab('mycard')">
       <span class="tab-icon">🎫</span>บัตรของฉัน
+    </button>
+    <button class="tab-btn" onclick="switchTab('summary')">
+      <span class="tab-icon">📊</span>สรุป
     </button>
   </div>
 </div>
@@ -579,6 +634,14 @@
     <div id="mycard-detail" style="display:none;">
       <button class="back-btn" onclick="backToCardSearch()">← กลับ</button>
       <div id="mycard-content"></div>
+    </div>
+  </div>
+
+
+  <!-- TAB: SUMMARY -->
+  <div id="tab-summary" class="tab-panel">
+    <div id="summary-content">
+      <div class="msg-box"><div class="loader"></div>กำลังโหลด...</div>
     </div>
   </div>
 
@@ -830,8 +893,8 @@ function switchTab(tab) {
   document.getElementById('tab-' + tab).classList.add('active');
   event.currentTarget.classList.add('active');
 
-  if (tab === 'news') renderNews();
   if (tab === 'event') renderEvent();
+  if (tab === 'summary') renderSummary();
 }
 
 
@@ -1032,6 +1095,85 @@ function backToCardSearch() {
   document.getElementById('mycard-search-view').style.display = 'block';
 }
 
+
+
+// ===== Summary =====
+function renderSummary() {
+  const el = document.getElementById('summary-content');
+  if (!allData.length) {
+    el.innerHTML = '<div class="msg-box"><div class="loader"></div>กำลังโหลด...</div>';
+    loadCSV().then(data => { allData = data; buildSummary(); });
+  } else {
+    buildSummary();
+  }
+}
+
+function buildSummary() {
+  const el = document.getElementById('summary-content');
+  const received = allData.filter(r => {
+    const v = r['รับเสื้อ'] || '';
+    return v && v !== 'FALSE' && v !== 'false' && v !== '';
+  });
+  const notReceived = allData.filter(r => {
+    const v = r['รับเสื้อ'] || '';
+    return !v || v === 'FALSE' || v === 'false' || v === '';
+  });
+
+  const total = allData.length;
+
+  const personRow = (r) => {
+    const no = r['no'] || r['No'] || r['NO'] || '';
+    const name = r['ชื่อ-นามสกุล'] || r['ชื่อ นามสกุล'] || '—';
+    const nick = r['ชื่อเล่น'] || '';
+    const size = r['ขนาด'] || '—';
+    const color = r['สี'] || '—';
+    const qty = r['จำนวน'] || '—';
+    return `<div class="person-row">
+      <span class="person-no">#${no}</span>
+      <span class="person-name">${name}${nick ? ' <span style="color:var(--text3);font-size:11px;">(${nick})</span>' : ''}</span>
+      <span class="person-shirt">${size}/${color}×${qty}</span>
+    </div>`;
+  };
+
+  el.innerHTML = `
+    <div class="summary-card">
+      <div class="summary-header" style="background:var(--primary);">📊 ภาพรวมการรับเสื้อ</div>
+      <div class="summary-stat">
+        <div class="stat-box">
+          <div class="stat-num" style="color:var(--text2);">${total}</div>
+          <div class="stat-label">ทั้งหมด</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num" style="color:var(--success);">${received.length}</div>
+          <div class="stat-label">รับแล้ว</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num" style="color:var(--warn);">${notReceived.length}</div>
+          <div class="stat-label">ยังไม่รับ</div>
+        </div>
+      </div>
+      <div style="padding: 4px 16px 14px;">
+        <div style="background:var(--bg2);border-radius:8px;height:10px;overflow:hidden;">
+          <div style="background:var(--success);height:100%;width:${total ? Math.round(received.length/total*100) : 0}%;border-radius:8px;transition:width 0.5s;"></div>
+        </div>
+        <div style="font-size:11px;color:var(--text3);text-align:right;margin-top:4px;">${total ? Math.round(received.length/total*100) : 0}% รับแล้ว</div>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-header" style="background:var(--success);">✅ รับเสื้อแล้ว (${received.length} คน)</div>
+      <div class="person-list">
+        ${received.length ? received.map(personRow).join('') : '<div style="padding:10px 0;font-size:13px;color:var(--text3);">ยังไม่มีข้อมูล</div>'}
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-header" style="background:var(--warn);">📦 ยังไม่ได้รับ (${notReceived.length} คน)</div>
+      <div class="person-list">
+        ${notReceived.length ? notReceived.map(personRow).join('') : '<div style="padding:10px 0;font-size:13px;color:var(--text3);">ทุกคนรับแล้ว 🎉</div>'}
+      </div>
+    </div>`;
+}
 
 // ===== Admin Functions =====
 function toggleAdminLogin() {
